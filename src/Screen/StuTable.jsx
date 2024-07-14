@@ -52,12 +52,12 @@ const StuTable = ({ data }) => {
                     <th rowSpan="2" className="py-2 px-4 border">
                       Strength
                     </th>
-                    <th colSpan="2" className="py-2 px-4 border">
-                      {`Yesterday ${data[0].previousdate ? `-${data[0].previousdate}` : ''}`}
-                    </th>
-                    <th colSpan="2" className="py-2 px-4 border">
-                      {`Today  ${data[0].currentdate ? `-${data[0].currentdate}` : ''}`}
-                    </th>
+                    <th colSpan="2" className="py-2 px-4 border">{`Yesterday ${
+                      data[0].previousdate ? `-${data[0].previousdate}` : ""
+                    }`}</th>
+                    <th colSpan="2" className="py-2 px-4 border">{`Today  ${
+                      data[0].currentdate ? `-${data[0].currentdate}` : ""
+                    }`}</th>
                   </tr>
                   <tr>
                     <th className="py-2 px-4 border">P</th>
@@ -67,33 +67,13 @@ const StuTable = ({ data }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* {[...new Set(viewData.batchData.map((e) => e.batchname))].reverse().map((batchName, i) => {
-                    const batchData = viewData.batchData.filter((e) => e.batchname === batchName);
-
-                    const totalBatchLength = batchData.reduce((acc, cur) => acc + cur.stulength, 0);
-                    const totalYesterdayPresent = batchData.reduce((acc, cur) => acc + cur.previouspresent, 0);
-                    const totalYesterdayAbsent = batchData.reduce((acc, cur) => acc + cur.previousabsent, 0);
-                    const totalCurrentPresent = batchData.reduce((acc, cur) => acc + cur.currentpresent, 0);
-                    const totalCurrentAbsent = batchData.reduce((acc, cur) => acc + cur.currentabsent, 0);
-
-                    return (
-                      <tr key={i}>
-                        <td className="border px-4 py-2">{batchName}</td>
-                        <td className="border px-4 py-2">{totalBatchLength}</td>
-                        <td className="border px-4 py-2">{totalYesterdayPresent}</td>
-                        <td className="border px-4 py-2">{totalYesterdayAbsent}</td>
-                        <td className="border px-4 py-2">{totalCurrentPresent}</td>
-                        <td className="border px-4 py-2">{totalCurrentAbsent}</td>
-                      </tr>
-                    );
-                  })} */}
-
-                  {
-                    viewData.batchData.sort((a, b) => {
+                  {viewData.batchData
+                    .sort((a, b) => {
                       if (a.batchname < b.batchname) return 1;
                       if (a.batchname > b.batchname) return -1;
                       return 0;
-                    }).map((e, i) => {
+                    })
+                    .map((e, i) => {
                       const {
                         batchname,
                         section,
@@ -108,13 +88,49 @@ const StuTable = ({ data }) => {
                           <td className="border px-4 py-2">{batchname}</td>
                           <td className="border px-4 py-2">{section}</td>
                           <td className="border px-4 py-2">{batchlength}</td>
-                          <td className="border px-4 py-2">{previouspresent}</td>
+                          <td className="border px-4 py-2">
+                            {previouspresent}
+                          </td>
                           <td className="border px-4 py-2">{previousabsent}</td>
                           <td className="border px-4 py-2">{currentpresent}</td>
                           <td className="border px-4 py-2">{currentabsent}</td>
                         </tr>
                       );
-                  })}
+                    })}
+                  <tr className="font-bold bg-[#f0f0f0] text-center text-sm border">
+                    <td className="px-4 text-left">Total</td>
+                    <td className="px-2 text-center"></td>
+                    <td className="px-4 text-center">
+                      {viewData?.batchData?.reduce(
+                        (a, r) => a + (r.batchlength || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="px-4">
+                      {viewData?.batchData?.reduce(
+                        (a, r) => a + (r.previouspresent || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="px-4">
+                      {viewData?.batchData?.reduce(
+                        (a, r) => a + (r.previousabsent || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="px-4">
+                      {viewData?.batchData?.reduce(
+                        (a, r) => a + (r.currentpresent || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="px-4">
+                      {viewData?.batchData?.reduce(
+                        (a, r) => a + (r.currentabsent || 0),
+                        0
+                      )}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -204,6 +220,40 @@ const StuTable = ({ data }) => {
               </tr>
             );
           })}
+          <tr className="font-bold bg-[#f0f0f0] text-center text-sm border">
+            <td className="px-4  text-left">Total</td>
+            <td className="px-4 ">
+              {data.reduce((acc, row) => acc + (row.stulength || 0), 0)}
+            </td>
+            <td className="px-4 ">
+              {data.reduce(
+                (acc, row) =>
+                  acc + (row.prepresentavg ? row.previouspresent : 0),
+                0
+              )}
+            </td>
+            <td className="px-4 ">
+              {data.reduce(
+                (acc, row) =>
+                  acc + (row.preabesentavg ? row.previousabsent : 0),
+                0
+              )}
+            </td>
+            <td className="px-4 ">
+              {data.reduce(
+                (acc, row) =>
+                  acc + (row.curpresentavg ? row.currentpresent : 0),
+                0
+              )}
+            </td>
+            <td className="px-4 ">
+              {data.reduce(
+                (acc, row) => acc + (row.curabesentavg ? row.currentabsent : 0),
+                0
+              )}
+            </td>
+            <td rowSpan={1} className="px-4  text-center"></td>
+          </tr>
         </tbody>
       </table>
     </div>
