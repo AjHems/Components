@@ -1,13 +1,11 @@
 import React from "react";
-// import ChartBox from "./Components/Dashboard/Chart";
-import StundentAttendanceDashboard from "./Screen/StundentAttendanceDashboard";
 
+import StudentAttendanceDashboard from "./Screen/StundentAttendanceDashboard";
 
 const App = () => {
   return (
     <div>
-      {/* <ChartBox /> */}
-      <StundentAttendanceDashboard />
+      <StudentAttendanceDashboard />
     </div>
   );
 };
