@@ -12,8 +12,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { ImTable } from 'react-icons/im';
-import { FcComboChart } from 'react-icons/fc';
+// import { ImTable } from 'react-icons/im';
+// import { FcComboChart } from 'react-icons/fc';
 import InstaTable from "./InstaTable";
 import ChartLoaders from "./ChartLoader";
 
@@ -29,7 +29,11 @@ ChartJS.register(
 
 export default function StudentAttendanceDashboard() {
   const [isChartOpen, setIsChartOpen] = useState(false);
-  const programmes = jsonData.map((programme) => programme.programmeshortname ?? programme.deptshortname);
+  const programmes = jsonData.map((val) =>
+    val.isinst
+      ? val.deptshortname ?? val.dept.substring(0, 6)
+      : val.programmeshortname ?? val.deptshortname ?? val.dept.substring(0, 6)
+  );
 
   const totalCurrentPresentByProgram = (shortname) => {
     return jsonData
@@ -49,62 +53,103 @@ export default function StudentAttendanceDashboard() {
 
   const currentAbsentData = programmes.map((shortname) => totalCurrentAbsentByProgram(shortname));
 
+  const totalCurneByProgram = (shortname) => {
+    return jsonData
+      .filter((programme) => programme.programmeshortname === shortname)
+      .flatMap((programme) => programme.batchData.map((batch) => batch.curne))
+      .reduce((total, absent) => total + absent, 0);
+  };
+
+  const totalCurneData = programmes.map((shortname) => totalCurneByProgram(shortname));
+  console.log(totalCurneData,"cur2545");
+ 
+  const instaPreData = jsonData.map((e) => e.currentpresent);
+  const instaAbsData = jsonData.map((e) => e.currentabsent);
+  const CURNE = jsonData.map((e) => e.curne);
+  console.log(CURNE, 'DATA');
+
+  let presentData;
+  let absentData;
+  let curneData;
+
+  if (jsonData && jsonData.length > 0 && Object.keys(jsonData[0])[0] === 'dept') {
+    presentData = instaPreData;
+    absentData = instaAbsData;
+    curneData = CURNE;
+  } else {
+    presentData = currentPresentData;
+    absentData = currentAbsentData;
+    curneData =  totalCurneData // Ensure totalCurneData is defined and has the expected values
+  }
+
+  console.log(curneData, 'nedata');
+
   const barInitialData = {
     labels: programmes,
     datasets: [
       {
         label: 'Present',
-        data: currentPresentData,
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        data: presentData,
+        borderColor: '#66cdaa',
+        backgroundColor: '#3cb371',
         borderWidth: 2,
-        borderRadius: 10,
+        // borderRadius: 10,
         borderSkipped: false
       },
       {
         label: 'Absent',
-        data: currentAbsentData,
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        data: absentData,
+        borderColor: '#ff7f7f',
+        backgroundColor: '#f55d5d',
         borderWidth: 2,
-        borderRadius: 10,
+        // borderRadius: 10,
+        borderSkipped: false
+      },
+      {
+        label: 'NE',
+        data: curneData,
+        borderColor: 'rgb(255, 205, 86)',
+        backgroundColor: 'rgba(255, 205, 86, 0.2)',
+        borderWidth: 2,
+        // borderRadius: 10,
         borderSkipped: false
       }
     ]
   };
 
-  const curDayPreAvg = jsonData.map((e) => e.curpresentavg);
-  const curDayAbsAvg = jsonData.map((e) => e.curabesentavg);
+  const curDayPreAvg = jsonData.map((e) => (e.currentpresent ? e.currentpresent : 0));
+  const curDayAbsAvg = jsonData.map((e) => (e.currentabsent ? e.currentabsent : 0));
+  const overAllTotal = jsonData.map((e) => e.stulength).reduce((a, c) => a + c, 0);
+  const neData = jsonData.map((e) => e.curne).reduce((a, c) => a + c, 0);
+  console.log(neData,"ne");
 
   const data1 = [];
   const data2 = [];
+  const data3 = []
 
   if (curDayPreAvg.length > 0 && curDayAbsAvg.length > 0) {
-    const preTotal = curDayPreAvg.reduce((a, c) => a + c);
-
-    const absTotal = curDayAbsAvg.reduce((a, c) => a + c);
+    const preTotal = ((curDayPreAvg.reduce((a, c) => a + c, 0) / overAllTotal) * 100).toFixed(2);
+    const absTotal = overAllTotal - curDayPreAvg.reduce((a, c) => a + c, 0) - neData
+    const abs = ((absTotal / overAllTotal) * 100).toFixed(2);
+    const neabs = (neData / overAllTotal *100).toFixed(2);
 
     data1.push(preTotal);
-    data2.push(absTotal);
+    data2.push(abs);
+    data3.push(neabs)
 
-    // console.log(`Total - Present : ${preTotal} Absent : ${absTotal}`);
-  } else {
-    console.error('jsonData is 0');
+    // console.log(`Total - Present : ${preTotal} Absent : ${absTotal} Abs : ${abs}`);
   }
 
-  // console.log(curDayPreAvg, curDayAbsAvg, "databook");
-
-  console.log(curDayPreAvg);
   const doughnutInitialData = {
-    labels: ['Present', 'Absent'],
+    labels: ['Present', 'Absent', 'NE'],
     datasets: [
       {
         label: 'Total Count',
-        data: [data1, data2],
-        borderColor: ['rgb(75, 192, 192)', 'rgb(255, 99, 132)'],
-        backgroundColor: ['rgba(75, 192, 192, 0.5)', 'rgba(255, 99, 132, 0.5)'],
+        data: [data1, data2, data3],
+        borderColor: ['#66cdaa', '#ff7f7f', 'rgb(255, 205, 86)'],
+        backgroundColor: ['#3cb371', '#f55d5d', 'rgba(255, 205, 86, 0.2)'],
         borderWidth: 2,
-        borderRadius: 10,
+        // borderRadius: 10,
         borderSkipped: false
       }
     ]
@@ -145,15 +190,19 @@ export default function StudentAttendanceDashboard() {
     data: doughnutInitialData,
     options: {
       responsive: true,
+      layout: {
+        padding: 15
+      },
       plugins: {
         legend: {
-          position: 'top'
-        },
-        title: {
-          display: true,
-          text: 'Institution Level'
+          position: 'bottom'
         }
-      }
+        // title: {
+        //   display: true,
+        //   text: 'Institution Level'
+        // }
+      },
+      maintainAspectRatio: true
     }
     // plugins: [plugin]
   };
@@ -162,15 +211,32 @@ export default function StudentAttendanceDashboard() {
     type: 'bar',
     data: barInitialData,
     options: {
+      layout: {
+        padding: 15
+      },
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'top'
+          position: 'bottom'
+        }
+        // title: {
+        //   display: true,
+        //   text: 'Attendance Dashboard'
+        // }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false
+          }
         },
-        title: {
-          display: true,
-          text: 'Attendance Dashboard'
+        y: {
+          grid: {
+            display: true
+          }
+          // suggestedMin: 1,
+          // suggestedMax: 100
         }
       }
     }
@@ -178,52 +244,95 @@ export default function StudentAttendanceDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-4 h-screen">
-      <div>
-        <div className="flex justify-end mb-4">
-        <span className="font-bold text-sm text-primary flex justify-center items-center mx-1">
-            Dashboard Type :{' '}
-          </span>
-          <div onClick={() => setIsChartOpen((prev) => !prev)}>
-            {isChartOpen ? (
-              <FcComboChart title="Click to Table" className="flex  text-3xl font-bold cursor-pointer" size={30} />
-            ) : (
-              <ImTable
-                title="Click to Chart"
-                className="flex  text-3xl font-bold cursor-pointer "
-                color="gray"
-                size={30}
-              />
-            )}
+    <div className="mx-3 mt-2">
+    {sessionStorage.role === 'staff' ? null : (
+      <>
+        <div className="w-full flex justify-between items-center border-b-2 pb-2 border-[#dedede]">
+          <div className="block">
+            <p className="text-lg font-semibold text-primary">
+              Attendance Status On : {jsonData?.[0]?.currentdate || null}
+            </p>
+            {/* <p className="text-[10px] text sm:ml-4">Last Updated : {Util.getFormatDateTime(serverTime)}</p> */}
+          </div>
+          <div className=" block">
+            <div className="flex justify-center items-center">
+              <span className="font-bold text-[11px] text-primary">View By :</span>
+              <div className="ml-2 flex justify-between items-center gap-1 border border-[#dedede] rounded-md ">
+                <button
+                  className={`text-[11px] text-text-color px-2 py-1 ${isChartOpen ? null : ' bg-loginbg rounded-l text-white'}`}
+                  // className="p-1  text-tiny cursor-pointer border px-2 rounded bg-primary text-white hover:bg-white hover:text-primary hover:border-primary"
+                  onClick={() => setIsChartOpen(false)}>
+                  Chart
+                </button>
+                <button
+                  className={`text-[11px] text-text-color px-2 py-1 ${jsonData.length ? 'cursor-pointer' : 'cursor-not-allowed'} ${isChartOpen ? ' bg-loginbg rounded-r text-white' : null}`}
+                  // className={`p-1 text-tiny text-text-color ${jsonData.length ? 'cursor-pointer' : 'cursor-not-allowed'} border px-2 rounded bg-primary text-white hover:bg-white hover:text-primary hover:border-primary`}
+                  onClick={() => setIsChartOpen(true)}
+                  disabled={jsonData.length === 0}>
+                  Table
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+        {isChartOpen ? (
+          <div className=" flex justify-between">
+            <span className="text-[10px] font-bold sm:ml-4 text-alert-color-text">
+              Attendance for UG & PG Courses only
+            </span>
+            <span className="text-[10px] font-bold sm:ml-4 text-alert-color-text">NE - Attendence Not Entered</span>
+          </div>
+        ) : null}
         {isChartOpen ? (
           Object.keys(jsonData[0])[0] === 'dept' ? (
             <InstaTable data={jsonData} />
           ) : (
             <StuTable data={jsonData} />
-          ) 
+          )
         ) : (
           <>
-            <span className="flex sm:block w-full gap-2">
-              <div className="h-72 w-[40%] center">
+            <div className="rounded-md my-2 flex sm:block smmd:block gap-2">
+              <div className="border border-l-4 border-solid border-primary p-2 rounded-md w-[25%] sm:w-full smmd:w-full sm:mb-2 h-[55vh] md:h-[30vh]">
+                {jsonData && jsonData[0] && Object.keys(jsonData[0])[0] === 'dept' ? (
+                  <p className="w-full text-primary font-bold text-sm border-b border-[#dedede] pb-1 ">
+                    Overall Institution
+                  </p>
+                ) : (
+                  <p className="w-full text-primary font-bold text-sm border-b border-[#dedede] pb-1 ">
+                    Overall Department
+                  </p>
+                )}
                 {jsonData.length === 0 ? (
-                  <ChartLoaders.ChartLoader />
+                  <div className="flex justify-center items-center w-full h-full px-5">
+                    <ChartLoaders.TextLoading />
+                  </div>
                 ) : (
                   <Doughnut data={doughnutConfig.data} options={doughnutConfig.options} />
                 )}
               </div>
-              <div className="h-72 w-[60%]">
+              <div className=" border border-l-4 border-solid border-primary p-2 rounded-md w-[75%] sm:w-full smmd:w-full mx-auto h-[55vh] md:h-[30vh]">
+                {jsonData && jsonData[0] && Object.keys(jsonData[0])[0] === 'dept' ? (
+                  <p className="w-full text-primary font-bold text-sm border-b border-[#dedede] pb-1 ">
+                    Department Wise
+                  </p>
+                ) : (
+                  <p className="w-full text-primary font-bold text-sm border-b border-[#dedede] pb-1 ">
+                    Programme Wise
+                  </p>
+                )}
                 {jsonData.length === 0 ? (
-                  <ChartLoaders.BarChart />
+                  <div className="flex justify-center items-center w-full h-full px-5">
+                    <ChartLoaders.TextLoading />
+                  </div>
                 ) : (
                   <Bar data={barConfig.data} options={barConfig.options} />
                 )}
               </div>
-            </span>
+            </div>
           </>
         )}
-      </div>
-    </div>
+      </>
+    )}
+  </div>
   );
 }
